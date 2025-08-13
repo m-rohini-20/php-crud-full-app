@@ -24,8 +24,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
     <div class="container">
-        <a class="navbar-brand" href="#">My Blog</a>
+        <a class="navbar-brand" href="index.php">My Blog</a>
         <div>
+            <a href="index.php" class="btn btn-outline-light btn-sm me-2">Home</a>
             <a href="login.php" class="btn btn-outline-light btn-sm">Login</a>
         </div>
     </div>
