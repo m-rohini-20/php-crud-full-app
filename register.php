@@ -5,11 +5,41 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
 
-    $sql = "INSERT INTO users (username, password) VALUES ('$username', '$password')";
-    if ($conn->query($sql) === TRUE) {
-        $success = "Registration successful! <a href='login.php'>Login here</a>";
-    } else {
-        $error = "Error: " . $conn->error;
+    // Simple server-side validation
+    if (empty($username) || empty($password)) {
+    $error = "All fields are required.";
+} 
+elseif (strlen($password) < 6) {
+    $error = "Password must be at least 6 characters long.";
+} 
+elseif (!preg_match("/[A-Za-z]/", $password) || !preg_match("/[0-9]/", $password)) {
+    $error = "Password must contain at least one letter and one number.";
+} 
+else {
+    // Check if username already exists
+        // Check if username already exists
+        $stmt = $conn->prepare("SELECT id FROM users WHERE username = ?");
+        $stmt->bind_param("s", $username);
+        $stmt->execute();
+        $stmt->store_result();
+
+        if ($stmt->num_rows > 0) {
+            $error = "Username already taken!";
+        } else {
+            // Hash password before saving
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+            // Insert new user with default role
+            $stmt = $conn->prepare("INSERT INTO users (username, password, role) VALUES (?, ?, 'editor')");
+            $stmt->bind_param("ss", $username, $hashedPassword);
+
+            if ($stmt->execute()) {
+                $success = "Registration successful! You can now log in.";
+            } else {
+                $error = "Error: " . $conn->error;
+            }
+        }
+        $stmt->close();
     }
 }
 ?>

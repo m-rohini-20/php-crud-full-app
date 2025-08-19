@@ -6,15 +6,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
 
-    $sql = "SELECT * FROM users WHERE username='$username' AND password='$password'";
-    $result = $conn->query($sql);
-
-    if ($result->num_rows > 0) {
-        $_SESSION['username'] = $username;
-        header("Location: dashboard.php");
-        exit;
+    if (empty($username) || empty($password)) {
+        $error = "Please enter both username and password.";
     } else {
-        $error = "Invalid username or password!";
+        // Prepared statement to get hashed password
+        $stmt = $conn->prepare("SELECT id, password, role FROM users WHERE username = ?");
+        $stmt->bind_param("s", $username);
+        $stmt->execute();
+        $stmt->store_result();
+
+        if ($stmt->num_rows > 0) {
+            $stmt->bind_result($userId, $hashedPassword, $role);
+            $stmt->fetch();
+
+            // Verify hashed password
+            if (password_verify($password, $hashedPassword)) {
+                $_SESSION['username'] = $username;
+                $_SESSION['user_id'] = $userId;
+                $_SESSION['role'] = $role;
+
+                header("Location: dashboard.php");
+                exit();
+            } else {
+                $error = "Invalid password!";
+            }
+        } else {
+            $error = "No user found with that username.";
+        }
+        $stmt->close();
     }
 }
 ?>

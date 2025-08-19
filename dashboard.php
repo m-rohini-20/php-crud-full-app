@@ -77,13 +77,16 @@ $result = mysqli_query($conn, $query);
 
 <div class="container bg-white p-4 rounded shadow-sm">
     <div class="d-flex justify-content-between mb-3">
+    <?php if ($_SESSION['role'] === 'admin') { ?>
         <a href="create.php" class="btn btn-success">+ Create New Post</a>
-        <form class="d-flex" method="GET" action="dashboard.php">
-            <input class="form-control me-2" type="text" name="search" placeholder="Search posts..."
-                   value="<?php echo htmlspecialchars($search); ?>">
-            <button class="btn btn-primary" type="submit">Search</button>
-        </form>
-    </div>
+    <?php } ?>
+    
+    <form class="d-flex" method="GET" action="dashboard.php">
+        <input class="form-control me-2" type="text" name="search" placeholder="Search posts..."
+               value="<?php echo htmlspecialchars($search); ?>">
+        <button class="btn btn-primary" type="submit">Search</button>
+    </form>
+</div>
 
     <!-- Posts Table -->
     <table class="table table-striped table-hover">
@@ -101,11 +104,15 @@ $result = mysqli_query($conn, $query);
                 <td><?php echo htmlspecialchars($row['title']); ?></td>
                 <td><?php echo htmlspecialchars(substr($row['content'], 0, 50)) . '...'; ?></td>
                 <td><?php echo $row['created_at']; ?></td>
-                <td>
+               <td>
+                    <?php if ($_SESSION['role'] === 'admin'): ?>
                     <a href="edit.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">Edit</a>
                     <a href="delete.php?id=<?php echo $row['id']; ?>" 
-                       onclick="return confirm('Are you sure?')" 
-                       class="btn btn-sm btn-danger">Delete</a>
+                     onclick="return confirm('Are you sure?')" 
+                     class="btn btn-sm btn-danger">Delete</a>
+                     <?php else: ?>
+                     <span class="text-muted">No actions</span>
+                     <?php endif; ?>
                 </td>
             </tr>
         <?php } ?>

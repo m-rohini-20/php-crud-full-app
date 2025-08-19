@@ -1,3 +1,18 @@
+<?php
+session_start();
+if (!isset($_SESSION['username'])) {
+    header("Location: login.php");
+    exit();
+}
+
+// ✅ Allow only admin to edit posts
+if ($_SESSION['role'] != 'admin') {
+    echo "<script>alert('Access denied! Only admin can edit posts.'); 
+    window.location='dashboard.php';</script>";
+    exit();
+}
+
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -21,8 +36,17 @@ if ($id) {
         $title = $conn->real_escape_string($_POST["title"]);
         $content = $conn->real_escape_string($_POST["content"]);
 
-        $sql = "UPDATE posts SET title='$title', content='$content' WHERE id=$id";
-        $conn->query($sql);
+        $stmt = $conn->prepare("UPDATE posts SET title = ?, content = ? WHERE id = ?");
+        $stmt->bind_param("ssi", $title, $content, $id);
+
+        if ($stmt->execute()) {
+         echo "<p style='color:green;'>Post updated successfully!</p>";
+        }
+         else {
+             echo "Error: " . $stmt->error;
+        }
+
+$stmt->close();
 
         header("Location: posts.php");
         exit();

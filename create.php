@@ -14,6 +14,11 @@ if (!isset($_SESSION["username"])) {
     exit();
 }
 
+if ($_SESSION['role'] !== 'admin') {
+    echo "<script>alert('Access denied! Only admin can create posts.'); window.location='dashboard.php';</script>";
+    exit();
+}
+
 $conn = new mysqli("localhost", "root", "", "blog");
 
 if ($conn->connect_error) {
@@ -21,15 +26,23 @@ if ($conn->connect_error) {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $title = $conn->real_escape_string($_POST["title"]);
-    $content = $conn->real_escape_string($_POST["content"]);
+    $title = trim($_POST["title"]);
+    $content = trim($_POST["content"]);
 
-    $sql = "INSERT INTO posts (title, content) VALUES ('$title', '$content')";
-
-    if ($conn->query($sql) === TRUE) {
-        echo "<p style='color:green;'>Post created successfully!</p>";
+    if (empty($title) || empty($content)) {
+        echo "<p style='color:red;'>Title and Content cannot be empty!</p>";
     } else {
-        echo "Error: " . $conn->error;
+    
+        $stmt = $conn->prepare("INSERT INTO posts (title, content) VALUES (?, ?)");
+        $stmt->bind_param("ss", $title, $content);
+
+        if ($stmt->execute()) {
+            echo "<p style='color:green;'>Post created successfully!</p>";
+        } else {
+            echo "Error: " . $stmt->error;
+        }
+
+        $stmt->close();
     }
 }
 ?>
